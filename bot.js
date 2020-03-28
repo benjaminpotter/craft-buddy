@@ -32,7 +32,7 @@ client.on('message', msg => {
             msg.reply('hello! I am CraftBuddy here to assist you!');
             msg.reply('if you have any questions try: *help.');
         }
-        else if (agrs == 'help') {
+        else if (args == 'help') {
             msg.reply('stupid.');
         }
     }

@@ -28,8 +28,13 @@ client.on('message', msg => {
         else if (args == 'katie') {
             msg.reply('ginger');
         }
-
-        client.actions
+        else if (args == 'hello') {
+            msg.reply('hello! I am CraftBuddy here to assist you!');
+            msg.reply('if you have any questions try: *help.');
+        }
+        else if (agrs == 'help') {
+            msg.reply('stupid.');
+        }
     }
 });
 

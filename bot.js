@@ -7,6 +7,8 @@ const client = new Discord.Client();
 const https = require('https');
 const serverIP = 'minecraft.baffqd.com';
 
+const spawn = require("child_process").spawn;
+
 var serverlist = [];
 
 var Server = function(ip) {
@@ -84,7 +86,7 @@ client.on('message', msg => {
         // start the server
         else if (args == 'start') {
             msg.reply('server starting...');
-            toggleServer( () => { msg.reply('server started.') });
+            toggleServer( () => { msg.reply('server started.'); msg.reply('server could take time to load.'); });
         }
 
         // stop the server
@@ -116,18 +118,21 @@ var sendMessage = function(channel, content) {
 
 // ask the server for information
 var queryServer = function(cb) {
-    https.get('https://mcapi.us/server/status?ip=' + serverIP, (response) => {
-        var data = '';
+    const serverQuery = spawn('python3',["query_server.py"]);
+    let status = {};
+    status.online = false;
 
-        response.on('data', (chunk) => {
-            data += chunk;
-        });
+    serverQuery.stdout.on('data', (data) => {
+        status.online = true;
+        status.players = {};
+        status.players.now = data.toString();
+        status.players.max = 20;
 
-        response.on('end', () => {
-            data = JSON.parse(data);
-
-            cb(data);
-        });
+        cb(status);
+    });
+    
+    serverQuery.stderr.on('data', (data) => {
+        cb(status);
     });
 };
 

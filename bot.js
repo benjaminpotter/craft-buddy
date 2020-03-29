@@ -29,7 +29,7 @@ client.on('message', msg => {
 
     // mahan
     if (msg.author.id == '505756086855532571') {
-        msg.reply('that was stupid.');
+        //msg.reply('that was stupid.');
     }
 
     // ben
@@ -85,14 +85,26 @@ client.on('message', msg => {
 
         // start the server
         else if (args == 'start') {
-            msg.reply('server starting...');
-            toggleServer( () => { msg.reply('server started.'); msg.reply('server could take time to load.'); });
+            queryServer( data => {
+                if (data.online) {
+                    msg.reply('the server is already running.');
+                } else {
+                    msg.reply('server starting...');
+                    toggleServer( () => { msg.reply('server started.'); msg.reply('server could take time to load.'); });
+                }
+            });
         }
 
         // stop the server
         else if (args == 'stop') {
-            msg.reply('server stopping...');
-            toggleServer( () => { msg.reply('server stopped.') });
+            queryServer( data => {
+                if (!data.online) {
+                    msg.reply('the server is already stopped.');
+                } else {
+                    msg.reply('server stopping...');
+                    toggleServer( () => { msg.reply('server stopped.'); msg.reply('server could take time to stop.'); });
+                }
+            });
         }
 
         else if (args.substring(0, 3) == 'add') {

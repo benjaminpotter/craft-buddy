@@ -9,6 +9,8 @@ const serverIP = 'minecraft.baffqd.com';
 
 const spawn = require("child_process").spawn;
 
+var mods = [];
+
 var serverlist = [];
 
 var Server = function(ip) {
@@ -18,6 +20,16 @@ var Server = function(ip) {
 
     return self;
 };
+
+var Mod = function(id) {
+    let self = {};
+
+    self.id = id;
+
+    return self;
+}
+
+mods.push(Mod('295562616447696898'));
 
 client.on('ready', () => {
     console.log(`Logged in as ${client.user.tag}!`);
@@ -29,7 +41,7 @@ client.on('message', msg => {
 
     // mahan
     if (msg.author.id == '505756086855532571') {
-        //msg.reply('that was stupid.');
+        msg.reply('that was stupid.');
     }
 
     // ben
@@ -119,6 +131,19 @@ client.on('message', msg => {
         // *kasper
         else if (args == 'kasper') {
             sendMessage(msg.channel, 'my dad');
+        }
+
+
+
+
+        // REQUIRES MOD PRIVILAGES
+
+        else if (args.substring(0, 12) == 'add-response') {
+            console.log('hello');
+        }
+
+        else {
+            msg.reply('command not found.');
         }
     }
 });

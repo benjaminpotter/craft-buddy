@@ -9,13 +9,24 @@ const serverIP = 'minecraft.baffqd.com';
 
 const spawn = require("child_process").spawn;
 
-var mods = [];
+var mongoClient = require('mongodb').MongoClient;
+var url = "mongodb://localhost:27017/mydb";
 
-var serverlist = [];
-
-var Server = function(ip) {
+var Guild = function(id) {
     let self = {};
 
+    self.id = id;
+
+    self.servers = [];
+    self.mods = [];
+
+    return self;
+};
+
+var Server = function(guild, ip) {
+    let self = {};
+
+    self.guild = guild;
     self.ip = ip;
 
     return self;
@@ -29,7 +40,34 @@ var Mod = function(id) {
     return self;
 }
 
-mods.push(Mod('295562616447696898'));
+var guilds = [Guild('693266228084604930')]; // all the guild objects
+
+mongoClient.connect(url, (err, db) => {
+    var dbo = db.db('mydb');
+
+    var query = { id: '693266228084604930' };
+    dbo.collection('guilds').find(query).toArray(function(err, result) {
+        if (err) throw err;
+        //console.log(result);
+        db.close();
+    });
+}); 
+
+client.on('guildCreate', (guild) => {
+    guilds.push(Guild(guild.id));
+    mongoClient.connect(url, function(err, db) {
+        var dbo = db.db("mydb");
+        
+        let guildObj = guilds[guilds.length - 1];
+        dbo.collection('guilds').insertOne(guildObj, function(err, res) {
+            if (err) throw err;
+
+            console.log('inserted guild with id: ' + guild.id);
+
+            db.close();
+        });
+    });
+});
 
 client.on('ready', () => {
     console.log(`Logged in as ${client.user.tag}!`);
@@ -127,7 +165,7 @@ client.on('message', msg => {
         }
 
         else if (args.substring(0, 3) == 'add') {
-            serverlist.push(args.substring(3, args.length));
+            
         }
 
         // *katie

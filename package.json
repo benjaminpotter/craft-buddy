@@ -9,6 +9,7 @@
     "discord.io": "^2.5.3",
     "discord.js": "^12.1.1",
     "dotenv": "^8.2.0",
+    "mongodb": "^3.5.5",
     "winston": "^3.2.1"
   },
   "devDependencies": {},

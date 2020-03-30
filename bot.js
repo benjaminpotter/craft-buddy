@@ -194,6 +194,30 @@ client.on('message', msg => {
             console.log('hello');
         }
 
+        else if (args == 'reload') {
+            //guilds.push(Guild(guild.id));
+            var guild = msg.guild;
+            mongoClient.connect(url, function(err, db) {
+                var dbo = db.db("mydb");
+            
+                let guildObj = guilds[guilds.length - 1];
+                dbo.collection('guilds').replaceOne( { id: guildObj.id }, guildObj, { upsert: true }, function(err, res) {
+                    if (err) throw err;
+
+                    console.log('inserted guild with id: ' + guild.id);
+
+                    db.close();
+                });
+
+                var query = { id: guildObj.id };
+                dbo.collection('guilds').find(query).toArray(function(err, result) {
+                    if (err) throw err;
+                    console.log(result);
+                    db.close();
+                });
+            });
+        }
+
         else {
             msg.reply('command not found.');
         }

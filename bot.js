@@ -26,17 +26,17 @@ var Guild = function(id) {
         return self;
     };
 
-    Guild.guilds.push(self);
     return self;
 };
 
 Guild.guilds = [];
 Guild.findGuild = function(id) {
     for (var i = 0; i < Guild.guilds.length; i++) {
-        if (Guild.guilds[i].id = id)
+        if (Guild.guilds[i].id === id){
             return Guild.guilds[i];
+        }
     }
-    return null;
+    return undefined;
 };
 Guild.loadAll = function(cb) {
     mongoClient.connect(url, function(err, db) {
@@ -53,6 +53,7 @@ Guild.loadAll = function(cb) {
     });
 };
 
+Guild.guilds.push(Guild('693266228084604930'));
 
 var Server = function(guild, ip) {
     let self = {};
@@ -80,7 +81,15 @@ client.on('ready', () => {
     console.log(`Logged in as ${client.user.tag}!`);
 
     Guild.loadAll( result => {
-        Guild.guilds += result;
+        console.log("Entries: " + result.length);
+        
+        console.log('Results from db: ' + result);
+
+        Guild.guilds.concat(result);
+
+        console.log('Entries after result: ' + Guild.guilds.length);
+
+        console.log(Guild.guilds[0].servers);
     });
 });
 
@@ -199,7 +208,9 @@ client.on('message', msg => {
         }
 
         else if (args == 'reload') {
-            pushGuildToDB(Guild.findGuild(msg.guild.id));
+            var g = Guild.findGuild(msg.guild.id);
+            g.servers.push('hello');
+            pushGuildToDB(g);
         }
 
         else if (args == 'guild') {
@@ -210,7 +221,7 @@ client.on('message', msg => {
 
                 var query = { id: guild.id };
                 dbo.collection('guilds').find(query).toArray(function(err, result) {
-                    if (err) throw err;
+                    if (err) console.log(err);
                     
                     if (result.length != 0) {
                         let msg = new Discord.MessageEmbed()
@@ -290,6 +301,9 @@ var toggleServer = function(cb) {
 
 // EXPECTS A CRAFTBUDDY GUILD OBJECT
 var pushGuildToDB = function(g) {   
+
+    if(g.id == undefined)
+        return;
     
     mongoClient.connect(url, function(err, db) {
         var dbo = db.db("mydb");
@@ -300,12 +314,16 @@ var pushGuildToDB = function(g) {
 
             if (result.length == 0) {
                 dbo.collection('guilds').insertOne( g, function(err, res) {
-                    if (err) throw err;
+                    if (err) console.log(err);
 
-                    console.log('inserted guild with id: ' + g.id);
+                    console.log('inserted guild with id: ' + g.servers);
 
                     db.close();
                 });
+            } else {
+
+                // UPDATE THE INFORMATION
+
             }
 
             db.close();

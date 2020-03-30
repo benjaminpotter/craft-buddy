@@ -59,7 +59,7 @@ client.on('guildCreate', (guild) => {
         var dbo = db.db("mydb");
         
         let guildObj = guilds[guilds.length - 1];
-        dbo.collection('guilds').updateOne( { id: guildObj.id }, guildObj, upsert=true, function(err, res) {
+        dbo.collection('guilds').updateOne( { id: guildObj.id }, guildObj, { upsert: true }, function(err, res) {
             if (err) throw err;
 
             console.log('inserted guild with id: ' + guild.id);

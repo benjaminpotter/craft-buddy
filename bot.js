@@ -95,10 +95,17 @@ client.on('message', msg => {
             });
         }
 
+        // is the instance running
+        else if (args == 'instance') {
+            isInstanceRunning( status => {
+                msg.reply(status + '.');
+            });
+        }
+
         // start the server
         else if (args == 'start') {
-            queryServer( data => {
-                if (data.online) {
+            isInstanceRunning( status => {
+                if (status != 'stopped') {
                     msg.reply('the server is already running.');
                 } else {
                     msg.reply('server starting...');
@@ -109,8 +116,8 @@ client.on('message', msg => {
 
         // stop the server
         else if (args == 'stop') {
-            queryServer( data => {
-                if (!data.online) {
+            isInstanceRunning( status => {
+                if (status != 'running' || status != 'starting') {
                     msg.reply('the server is already stopped.');
                 } else {
                     msg.reply('server stopping...');
@@ -178,6 +185,23 @@ var getStatus = function(cb) {
     queryServer( data => {
         status = data["online"];
         cb(status);
+    });
+};
+
+var isInstanceRunning = function(cb) {
+    https.get('https://qfguw5x1u4.execute-api.us-east-2.amazonaws.com/status', resp => {
+        var data = '';
+
+        resp.on('data', chunk => {
+            data += chunk;
+        });
+
+        resp.on('end', () => {
+            //data = JSON.parse(data);
+
+            // running or stopped
+            cb(data);
+        });
     });
 };
 

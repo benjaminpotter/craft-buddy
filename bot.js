@@ -9,10 +9,11 @@ const serverIP = 'minecraft.baffqd.com';
 
 const spawn = require("child_process").spawn;
 
-var mongoClient = require('mongodb').MongoClient;
 var url = "mongodb://localhost:27017/mydb";
+var mongoClient = require('mongodb').MongoClient;
 
 var Guild = function(id) {
+
     let self = {};
 
     self.id = id;
@@ -22,10 +23,36 @@ var Guild = function(id) {
 
     self.copy = function(guild) {
         self = guild;
+        return self;
     };
 
+    Guild.guilds.push(self);
     return self;
 };
+
+Guild.guilds = [];
+Guild.findGuild = function(id) {
+    for (var i = 0; i < Guild.guilds.length; i++) {
+        if (Guild.guilds[i].id = id)
+            return Guild.guilds[i];
+    }
+    return null;
+};
+Guild.loadAll = function(cb) {
+    mongoClient.connect(url, function(err, db) {
+        var dbo = db.db("mydb");
+
+        var query = {};
+        dbo.collection('guilds').find(query).toArray(function(err, result) {
+            if (err) throw err;
+            
+            cb(result);
+
+            db.close();
+        });
+    });
+};
+
 
 var Server = function(guild, ip) {
     let self = {};
@@ -44,44 +71,17 @@ var Mod = function(id) {
     return self;
 }
 
-var guilds = [Guild('693266228084604930')]; // all the guild objects
-
-mongoClient.connect(url, (err, db) => {
-    var dbo = db.db('mydb');
-
-    var query = { id: '693266228084604930' };
-    dbo.collection('guilds').find(query).toArray(function(err, result) {
-        if (err) throw err;
-        //console.log(result);
-        db.close();
-    });
-}); 
-
 client.on('guildCreate', (guild) => {
-    guilds.push(Guild(guild.id));
-    mongoClient.connect(url, function(err, db) {
-        var dbo = db.db("mydb");
-        
-        let guildObj = guilds[guilds.length - 1];
-        dbo.collection('guilds').replaceOne( { id: guildObj.id }, guildObj, { upsert: true }, function(err, res) {
-            if (err) throw err;
-
-            console.log('inserted guild with id: ' + guild.id);
-
-            db.close();
-        });
-
-        var query = { id: guildObj.id };
-        dbo.collection('guilds').find(query).toArray(function(err, result) {
-            if (err) throw err;
-            console.log(result);
-            db.close();
-        });
-    });
+    var newGuild = Guild(guild.id);
+    pushGuildToDB(newGuild);
 });
 
 client.on('ready', () => {
     console.log(`Logged in as ${client.user.tag}!`);
+
+    Guild.loadAll( result => {
+        Guild.guilds += result;
+    });
 });
 
 client.on('message', msg => {
@@ -166,7 +166,7 @@ client.on('message', msg => {
         // stop the server
         else if (args == 'stop') {
             isInstanceRunning( status => {
-                if (status != 'running' || status != 'starting') {
+                if (status != 'running') {
                     msg.reply('the server is already stopped.');
                 } else {
                     msg.reply('server stopping...');
@@ -199,25 +199,27 @@ client.on('message', msg => {
         }
 
         else if (args == 'reload') {
-            //guilds.push(Guild(guild.id));
+            pushGuildToDB(Guild.findGuild(msg.guild.id));
+        }
+
+        else if (args == 'guild') {
             var guild = msg.guild;
+            
             mongoClient.connect(url, function(err, db) {
                 var dbo = db.db("mydb");
-            
-                let guildObj = Guild('');
-                guildObj.copy(msg.guild);
-                dbo.collection('guilds').replaceOne( { id: guildObj.id }, guildObj, { upsert: true }, function(err, res) {
-                    if (err) throw err;
 
-                    console.log('inserted guild with id: ' + guild.id);
-
-                    db.close();
-                });
-
-                var query = { id: guildObj.id };
+                var query = { id: guild.id };
                 dbo.collection('guilds').find(query).toArray(function(err, result) {
                     if (err) throw err;
-                    console.log(result);
+                    
+                    if (result.length != 0) {
+                        let msg = new Discord.MessageEmbed()
+                            .setTitle(result[0].id)
+                            .setColor(0x0000ff)
+                            .setDescription('This guild');
+                        msg.channel.send(msg);
+                    }
+
                     db.close();
                 });
             });
@@ -283,6 +285,31 @@ var isInstanceRunning = function(cb) {
 var toggleServer = function(cb) {
     https.get('https://qfguw5x1u4.execute-api.us-east-2.amazonaws.com/default/startStop-Instance', (resp) => {
         cb();
+    });
+};
+
+// EXPECTS A CRAFTBUDDY GUILD OBJECT
+var pushGuildToDB = function(g) {   
+    
+    mongoClient.connect(url, function(err, db) {
+        var dbo = db.db("mydb");
+
+        var query = { id: g.id };
+        dbo.collection('guilds').find(query).toArray(function(err, result) {
+            if (err) throw err;
+
+            if (result.length == 0) {
+                dbo.collection('guilds').insertOne( g, function(err, res) {
+                    if (err) throw err;
+
+                    console.log('inserted guild with id: ' + g.id);
+
+                    db.close();
+                });
+            }
+
+            db.close();
+        });
     });
 };
 

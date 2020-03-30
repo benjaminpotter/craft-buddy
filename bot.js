@@ -20,6 +20,10 @@ var Guild = function(id) {
     self.servers = [];
     self.mods = [];
 
+    self.copy = function(guild) {
+        self = guild;
+    };
+
     return self;
 };
 
@@ -200,7 +204,8 @@ client.on('message', msg => {
             mongoClient.connect(url, function(err, db) {
                 var dbo = db.db("mydb");
             
-                let guildObj = Guild(msg.guild.id);
+                let guildObj = Guild('');
+                guildObj.copy(msg.guild);
                 dbo.collection('guilds').replaceOne( { id: guildObj.id }, guildObj, { upsert: true }, function(err, res) {
                     if (err) throw err;
 

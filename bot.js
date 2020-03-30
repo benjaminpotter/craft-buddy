@@ -66,6 +66,13 @@ client.on('guildCreate', (guild) => {
 
             db.close();
         });
+
+        var query = { id: guildObj.id };
+        dbo.collection('guilds').find(query).toArray(function(err, result) {
+            if (err) throw err;
+            console.log(result);
+            db.close();
+        });
     });
 });
 

@@ -200,7 +200,7 @@ client.on('message', msg => {
             mongoClient.connect(url, function(err, db) {
                 var dbo = db.db("mydb");
             
-                let guildObj = guilds[guilds.length - 1];
+                let guildObj = guild;
                 dbo.collection('guilds').replaceOne( { id: guildObj.id }, guildObj, { upsert: true }, function(err, res) {
                     if (err) throw err;
 
